@@ -31,16 +31,41 @@ class MainMenu extends StatefulWidget {
 
 class _MainMenuState extends State<MainMenu> {
   bool _loading = false;
+  int _selectedIndex = 0;
 
-  Future<void> _navigateTo(BuildContext context, Widget page) async {
-    setState(() => _loading = true);
-    await Future.delayed(const Duration(seconds: 1));
+  // Lista de páginas para el BottomNavigationBar
+  final List<Widget> _pages = const [
+    BienvenidaPage(),
+    CalculatorPage(),
+    MyAppFormu(),
+    ImagenInternetPage(),
+    BarraProgresoPage(),
+  ];
+
+  // Lista de títulos para el AppBar
+  final List<String> _titles = [
+    'Menú Angel Durán',
+    'Calculadora',
+    'Formulario IUJO',
+    'Imagen de Internet',
+    'Barra de Progreso',
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  Future<void> _navigateTo(BuildContext context, int index) async {
+    setState(() {
+      _loading = true;
+      _selectedIndex = index;
+    });
+    await Future.delayed(const Duration(milliseconds: 500));
     setState(() => _loading = false);
-    Navigator.push(
-      // ignore: use_build_context_synchronously
-      context,
-      MaterialPageRoute(builder: (context) => page),
-    );
+    // ignore: use_build_context_synchronously
+    Navigator.pop(context); // Cierra el Drawer si está abierto
   }
 
   Future<bool> _onWillPop() async {
@@ -48,7 +73,7 @@ class _MainMenuState extends State<MainMenu> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirmación'),
-        content: const Text('¿Seguro que te quieres salir?'),
+        content: const Text('¿Salir?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -65,11 +90,12 @@ class _MainMenuState extends State<MainMenu> {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Menú Angel Durán'),
+          title: Text(_titles[_selectedIndex]),
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         ),
         drawer: Drawer(
@@ -83,48 +109,36 @@ class _MainMenuState extends State<MainMenu> {
                 child: Text('Menú', style: TextStyle(color: Colors.white, fontSize: 24)),
               ),
               ListTile(
+                leading: const Icon(Icons.home),
+                title: const Text('Bienvenida'),
+                onTap: () => _navigateTo(context, 0),
+              ),
+              ListTile(
                 leading: const Icon(Icons.calculate),
                 title: const Text('Calculadora'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _navigateTo(context, const CalculatorPage());
-                },
+                onTap: () => _navigateTo(context, 1),
               ),
               ListTile(
                 leading: const Icon(Icons.format_shapes),
                 title: const Text('Formulario IUJO'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _navigateTo(context, const MyAppFormu());
-                },
+                onTap: () => _navigateTo(context, 2),
               ),
               ListTile(
                 leading: const Icon(Icons.image),
                 title: const Text('Imagen de Internet'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _navigateTo(context, const ImagenInternetPage());
-                },
+                onTap: () => _navigateTo(context, 3),
               ),
               ListTile(
                 leading: const Icon(Icons.linear_scale),
                 title: const Text('Barra de Progreso'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _navigateTo(context, const BarraProgresoPage());
-                },
+                onTap: () => _navigateTo(context, 4),
               ),
             ],
           ),
         ),
         body: Stack(
           children: [
-            const Center(
-              child: Text(
-                '¡Bienvenido a mi Menu improvisado :D!',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-            ),
+            _pages[_selectedIndex],
             if (_loading)
               Container(
                 color: Colors.black54,
@@ -132,6 +146,69 @@ class _MainMenuState extends State<MainMenu> {
                   child: CircularProgressIndicator(),
                 ),
               ),
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.deepPurple,
+          unselectedItemColor: Colors.grey,
+          onTap: _onItemTapped,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Bienvenida',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.calculate),
+              label: 'Calculadora',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.format_shapes),
+              label: 'Formulario',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.image),
+              label: 'Imagen',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.linear_scale),
+              label: 'Progreso',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Página de bienvenida con imagen local y de internet
+class BienvenidaPage extends StatelessWidget {
+  const BienvenidaPage({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              '¡Bienvenido a mi Menu improvisado :D!',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            // Imagen local (puedes cambiar la ruta si tienes otra imagen)
+            Image.asset(
+              'assets/LOGO.png',
+              height: 120,
+            ),
+            const SizedBox(height: 16),
+            // Imagen de internet adicional
+            Image.network(
+              'https://as2.ftcdn.net/v2/jpg/05/59/23/93/1000_F_559239377_qpaV2ZLJpT3zrzt16a8R2EsBSQ18vewl.jpg',
+              height: 120,
+            ),
           ],
         ),
       ),
